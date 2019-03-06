@@ -6,9 +6,13 @@ use App\Http\Resources\Product\ProductCollection;
 use App\Http\Resources\Product\ProductResource;
 use App\Product;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(){
+        $this->middleware('auth:api')->except('show','index');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -37,7 +41,26 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+           'name'=>'required|max:255|unique:products',
+            'details'=>'required',
+            'stock'=>'required|max:6',
+            'price'=>'required|max:10',
+            'discount'=>'required|max:2'
+
+        ]);
+
+        $product=new Product();
+        $product->name=$request->name;
+        $product->details=$request->details;
+        $product->stock=$request->stock;
+        $product->price=$request->price;
+        $product->discount=$request->discount;
+        $product->save();
+
+        return response([
+            "data"=>new ProductResource($product)
+        ],201);
     }
 
     /**
@@ -71,7 +94,10 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $product->update($request->all());
+        return response([
+            "data"=>new ProductResource($product)
+        ],Response::HTTP_CREATED);
     }
 
     /**
